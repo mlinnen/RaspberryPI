@@ -3,15 +3,11 @@
 #ptvsd.enable_attach(secret = 'vs2013')
 
 from azure.servicebus import *
-import ConfigParser
+import azconfig
 
-# Make sure you create a azureconfig.py script
-config = ConfigParser.ConfigParser()
-config.read("azconfig.ini")
-AZURE_SERVICEBUS_NAMESPACE=config.get("servicebus","SERVICEBUS_NAMESPACE")
-# Note: this user should have manage rights
-AZURE_SERVICEBUS_ISSUER=config.get("servicebus","SERVICEBUS_ISSUER")
-AZURE_SERVICEBUS_ACCESS_KEY=config.get("servicebus","SERVICEBUS_ACCESS_KEY")
+# Read any configuration
+config = azconfig.AzureConfig()
+config.read()
 
 def menu():
     print "1 - Turn LED on"
@@ -31,7 +27,7 @@ def menu():
             break
     return result
 
-bus_service = ServiceBusService(service_namespace=AZURE_SERVICEBUS_NAMESPACE, account_key=AZURE_SERVICEBUS_ACCESS_KEY, issuer=AZURE_SERVICEBUS_ISSUER)
+bus_service = ServiceBusService(service_namespace=config.AZURE_SERVICEBUS_NAMESPACE, account_key=config.AZURE_SERVICEBUS_ACCESS_KEY, issuer=config.AZURE_SERVICEBUS_ISSUER)
 count = 1
 while True:
     menuOption = menu()
