@@ -3,7 +3,7 @@
 #ptvsd.enable_attach(secret = 'vs2013')
 
 import vsconfig
-import json, urllib2, base64, ConfigParser, pygst
+import json, urllib2, base64, ConfigParser, time
 from datetime import datetime
 
 def GetFailedUrl(account, project, dateTime):
@@ -55,24 +55,26 @@ def GetLastBuildData(dateTime):
 config = vsconfig.VSOnlineConfig()
 config.read()
 
-qDateTime = GetLastDateTime()
+while True:
+	qDateTime = GetLastDateTime()
 
-data = GetLastBuildData(qDateTime)
+	data = GetLastBuildData(qDateTime)
 
-dateTimeNow = datetime.utcnow()
+	dateTimeNow = datetime.utcnow()
 
-SaveLastDateTime(dateTimeNow)
+	SaveLastDateTime(dateTimeNow)
 
-count = data["count"]
-if count==0:
-	print "no broken builds found"
-else:
-	print count
-	i = 0
-	displayName = data["value"][i]["requests"][0]["requestedFor"]["displayName"]
-	status = data["value"][i]["status"]
-	buildNumber = data["value"][i]["buildNumber"]
-	finishTime = data["value"][i]["finishTime"]
-	
-	print buildNumber + " completed at " + finishTime + " " + status + " by " + displayName
+	count = data["count"]
+	if count==0:
+		print "no broken builds found"
+	else:
+		print count
+		i = 0
+		displayName = data["value"][i]["requests"][0]["requestedFor"]["displayName"]
+		status = data["value"][i]["status"]
+		buildNumber = data["value"][i]["buildNumber"]
+		finishTime = data["value"][i]["finishTime"]
+		
+		print buildNumber + " completed at " + finishTime + " " + status + " by " + displayName
 
+	time.sleep(30)
