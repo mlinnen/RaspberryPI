@@ -3,12 +3,20 @@
 #ptvsd.enable_attach(secret = 'vs2013')
 
 import vsconfig
-import json, urllib2, base64, ConfigParser, time
+import os, json, urllib2, base64, ConfigParser, time
 from datetime import datetime
 
 def GetFailedUrl(account, project, dateTime):
 	sdate = "{0}-{1}-{2}%20{3}:{4}:00".format(dateTime.year,dateTime.month,dateTime.day,dateTime.hour,dateTime.minute)
 	return "https://" + account + ".visualstudio.com/DefaultCollection/_apis/build/builds?projectName=" + project + "&status=failed&minFinishTime=" + sdate
+
+def Say(message):
+	# Use Google Translate Text To Speech
+	tts_text = message.replace(" ","+")
+	tts_url = "'http://translate.google.com/translate_tts?ie=UTF-8&tl=en&q="+tts_text + "'"
+	cmd_line = "wget -q -U Mozilla -O texttospeech.mp3 " + tts_url 
+	os.system(cmd_line)
+	os.system("mplayer texttospeech.mp3")
 
 def GetLastDateTime():
 	config = ConfigParser.ConfigParser()
@@ -34,7 +42,7 @@ def SaveLastDateTime(dateTime):
 		config.write(configfile)
 	return
 
-def GetLastBuildData(dateTime):
+def GetLatestBrokenBuildData(dateTime):
 	# Setup the request
 	request = urllib2.Request(GetFailedUrl(config.VS_ONLINE_ACCOUNT,config.VS_ONLINE_PROJECT,qDateTime))
 
@@ -56,13 +64,12 @@ config = vsconfig.VSOnlineConfig()
 config.read()
 
 while True:
+
+	# get the datetime the last time we queried the broken build status
 	qDateTime = GetLastDateTime()
 
-	data = GetLastBuildData(qDateTime)
-
-	dateTimeNow = datetime.utcnow()
-
-	SaveLastDateTime(dateTimeNow)
+	# look for any new broken builds
+	data = GetLatestBrokenBuildData(qDateTime)
 
 	count = data["count"]
 	if count==0:
@@ -70,11 +77,22 @@ while True:
 	else:
 		print count
 		i = 0
-		displayName = data["value"][i]["requests"][0]["requestedFor"]["displayName"]
-		status = data["value"][i]["status"]
-		buildNumber = data["value"][i]["buildNumber"]
-		finishTime = data["value"][i]["finishTime"]
+		row = data["value"][i]
+		displayName = row["requests"][0]["requestedFor"]["displayName"]
+		status = row["status"]
+		buildNumber = row["buildNumber"]
+		finishTime = row["finishTime"]
 		
 		print buildNumber + " completed at " + finishTime + " " + status + " by " + displayName
 
+		message = "I blame " + displayName + " for breaking the build!"
+		Say(message)
+
 	time.sleep(30)
+
+	# timestamp
+	dateTimeNow = datetime.utcnow()
+
+	# save the timestamp so that we know how to query the next time
+	SaveLastDateTime(dateTimeNow)
+
