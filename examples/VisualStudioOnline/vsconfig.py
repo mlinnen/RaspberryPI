@@ -17,11 +17,13 @@ class VSOnlineConfig:
 			config.set("vsonline","VSONLINE_USERNAME","username")
 			config.set("vsonline","VSONLINE_PASSWORD","password")
 			config.set("vsonline","VSONLINE_PROJECT","project")
+			config.set("vsonline","VSONLINE_DEFINITION","buildDefinition")
 
 		self.VS_ONLINE_ACCOUNT=config.get("vsonline","VSONLINE_ACCOUNT")
 		self.VS_ONLINE_USER_NAME=config.get("vsonline","VSONLINE_USERNAME")
 		self.VS_ONLINE_PASSWORD=config.get("vsonline","VSONLINE_PASSWORD")
 		self.VS_ONLINE_PROJECT=config.get("vsonline","VSONLINE_PROJECT")
+		self.VS_ONLINE_DEFINITION=config.get("vsonline","VSONLINE_DEFINITION")
 
 		# Write out the configuration file
 		with open('vsconfig.ini', 'wb') as configfile:

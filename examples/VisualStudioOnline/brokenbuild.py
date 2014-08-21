@@ -1,14 +1,23 @@
-# uncomment the following lines to enable visual studio remote debugging
-#import ptvsd
-#ptvsd.enable_attach(secret = 'vs2013')
+#
+# This python script runs on a raspberry pi and requests Visual Studio Online build status for the given
+#	account and project.
+# Run the script one time and edit the vsconfig.ini file with the following:
+#	account
+#	project
+#	username
+#	password
+# The Visual Studio Online user account must have the alternate credentials enabled. This allows
+# the script to use basic authentication to make the REST api call.
+
 
 import vsconfig
 import os, json, urllib2, base64, ConfigParser, time
 from datetime import datetime
 
-def GetFailedUrl(account, project, dateTime):
+def GetFailedUrl(account, project,definition, dateTime):
 	sdate = "{0}-{1}-{2}%20{3}:{4}:00".format(dateTime.year,dateTime.month,dateTime.day,dateTime.hour,dateTime.minute)
-	return "https://" + account + ".visualstudio.com/DefaultCollection/_apis/build/builds?projectName=" + project + "&status=failed&minFinishTime=" + sdate
+	return "https://" + account.replace(" ","%20") + ".visualstudio.com/DefaultCollection/_apis/build/builds?projectName=" + \
+				project.replace(" ","%20") + "&definition=" + definition.replace(" ","%20") + "&status=failed&minFinishTime=" + sdate
 
 def Say(message):
 	# Use Google Translate Text To Speech
@@ -44,7 +53,7 @@ def SaveLastDateTime(dateTime):
 
 def GetLatestBrokenBuildData(dateTime):
 	# Setup the request
-	request = urllib2.Request(GetFailedUrl(config.VS_ONLINE_ACCOUNT,config.VS_ONLINE_PROJECT,qDateTime))
+	request = urllib2.Request(GetFailedUrl(config.VS_ONLINE_ACCOUNT,config.VS_ONLINE_PROJECT,config.VS_ONLINE_DEFINITION,qDateTime))
 
 	#Do Basic Authentication
 	base64string = base64.encodestring('%s:%s' % (config.VS_ONLINE_USER_NAME, config.VS_ONLINE_PASSWORD)).replace('\n', '')
@@ -82,10 +91,11 @@ while True:
 		status = row["status"]
 		buildNumber = row["buildNumber"]
 		finishTime = row["finishTime"]
+		definition = row["definition"]
 		
 		print buildNumber + " completed at " + finishTime + " " + status + " by " + displayName
 
-		message = "I blame " + displayName + " for breaking the build!"
+		message = "I blame " + displayName + " for breaking the build called " + config.VS_ONLINE_DEFINITION
 		Say(message)
 
 	time.sleep(30)
