@@ -1,32 +1,21 @@
 #!/usr/bin/python
 import paho.mqtt.publish as publish
+import RPi.GPIO as GPIO
+import time
 
-def menu():
-    print "1 - Ring Front Doorbell"
-    print "2 - Ring Back Doorbell"
-    print "Enter - Exit"
-    result = 0
-    while True:
-        char = raw_input("Select an option from the menu:")
-        if char == '1':
-            result = 1
-            break
-        if char == '2':
-            result = 2
-            break
-        else:
-            result = 0
-            break
-    return result
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 while True:
-    menuOption = menu()
-    if menuOption == 1:
+    if GPIO.input(23) == 1:
+        print("front button pressed")
         publish.single("protosystemdemo/doorbell/ring", "1", hostname="test.mosquitto.org")
-        print "message sent to ring the front doorbell"
-    elif menuOption == 2:
+        time.sleep(2)
+    if GPIO.input(24) == 1:
+        print("back button pressed")
         publish.single("protosystemdemo/doorbell/ring", "2", hostname="test.mosquitto.org")
-        print "message sent to ring the back doorbell"
-    else:
-        break
+        time.sleep(2)
 
+
+GPIO.cleanup()
